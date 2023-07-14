@@ -422,6 +422,7 @@ public class Capacity {
         for (BrokerCapacity brokerCapacity : capacityEntries.values()) {
             JsonObject brokerEntry = generateBrokerCapacity(brokerCapacity);
             brokerList.add(brokerEntry);
+            
         }
 
         JsonObject config = new JsonObject();

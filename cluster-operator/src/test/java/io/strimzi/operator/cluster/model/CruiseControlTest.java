@@ -68,6 +68,7 @@ import io.strimzi.test.annotations.ParallelSuite;
 import io.strimzi.test.annotations.ParallelTest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+//import org.glassfish.jaxb.core.v2.
 import org.junit.jupiter.api.AfterAll;
 
 import java.util.ArrayList;
@@ -79,9 +80,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import static io.strimzi.operator.cluster.model.CruiseControl.API_HEALTHCHECK_PATH;
-import static io.strimzi.operator.cluster.model.CruiseControl.API_USER_NAME;
-import static io.strimzi.operator.cluster.model.CruiseControl.ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION;
+import static io.strimzi.operator.cluster.model.CruiseControl.*;
 import static io.strimzi.operator.cluster.operator.resource.cruisecontrol.CruiseControlConfigurationParameters.ANOMALY_DETECTION_CONFIG_KEY;
 import static io.strimzi.operator.cluster.operator.resource.cruisecontrol.CruiseControlConfigurationParameters.DEFAULT_GOALS_CONFIG_KEY;
 import static java.util.Collections.singletonList;
@@ -262,9 +261,12 @@ public class CruiseControlTest {
         Kafka resource = createKafka(cruiseControlSpec);
 
         Capacity capacity = new Capacity(Reconciliation.DUMMY_RECONCILIATION, resource.getSpec(), NODES, createStorageMap(resource), createResourceRequirementsMap(resource));
+        Map<String, String> cm = generateBrokerCapacityConfigMapData(capacity);
 
-        assertThat(getCapacityConfigurationFromEnvVar(resource, ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION), is(capacity.toString()));
-
+    //TODO RUN MINIKUBE START, CUSTOM DEPLOYMENT AND MAKE SURE CRUISE CONTROL RUN PROPERLY
+        //TODO get actual config map for testing at 263
+       // assertThat(getCapacityConfigurationFromEnvVar(resource, ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION), is(capacity.toString()));
+        assertThat(cm.get("capacity.json"), is(capacity.toString()));
         // Test generated disk capacity
         JbodStorage jbodStorage = new JbodStorageBuilder()
                 .withVolumes(
@@ -522,6 +524,10 @@ public class CruiseControlTest {
         assertThat(volume.getEmptyDir().getMedium(), is("Memory"));
         assertThat(volume.getEmptyDir().getSizeLimit(), is(new Quantity("100Mi")));
 
+        volume = volumes.stream().filter(vol -> CruiseControl.ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION.equals(vol.getName())).findFirst().orElseThrow();
+        assertThat(volume, is(notNullValue()));
+        assertThat(volume.getConfigMap().getName(), is(CruiseControlResources.brokerCapacityConfigMapName(cluster)));
+
         // Test volume mounts
         List<VolumeMount> volumesMounts = dep.getSpec().getTemplate().getSpec().getContainers().get(0).getVolumeMounts();
         assertThat(volumesMounts.size(), is(5));
@@ -545,6 +551,10 @@ public class CruiseControlTest {
         volumeMount = volumesMounts.stream().filter(vol -> VolumeUtils.STRIMZI_TMP_DIRECTORY_DEFAULT_VOLUME_NAME.equals(vol.getName())).findFirst().orElseThrow();
         assertThat(volumeMount, is(notNullValue()));
         assertThat(volumeMount.getMountPath(), is(VolumeUtils.STRIMZI_TMP_DIRECTORY_DEFAULT_MOUNT_PATH));
+
+        volumeMount = volumesMounts.stream().filter(vol -> CruiseControl.ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION.equals(vol.getName())).findFirst().orElseThrow();
+        assertThat(volumeMount, is(notNullValue()));
+        assertThat(volumeMount.getMountPath(), is(CruiseControlConfigurationParameters.DEFAULT_CAPACITY_CONFIG_FILE_CONFIG));
     }
 
     @ParallelTest

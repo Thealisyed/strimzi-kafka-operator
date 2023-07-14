@@ -189,6 +189,30 @@ public class CruiseControlReconciler {
                     .map((Void) null);
         }
     }
+    /**
+     * Manages the Cruise Control certificates Secret.
+     *
+     * @return      Future which completes when the reconciliation is done
+     */
+    protected Future<Void> brokerCapacityConfigMap() {
+        if (cruiseControl != null)  {
+            return MetricsAndLoggingUtils.metricsAndLogging(reconciliation, configMapOperator, cruiseControl.logging(), cruiseControl.metrics())
+                    .compose(metricsAndLogging -> {
+                        ConfigMap logAndMetricsConfigMap = cruiseControl.generateMetricsAndLogConfigMap(metricsAndLogging);
+
+                        return configMapOperator
+                                .reconcile(
+                                        reconciliation,
+                                        reconciliation.namespace(),
+                                        CruiseControlResources.logAndMetricsConfigMapName(reconciliation.name()),
+                                        logAndMetricsConfigMap
+                                ).map((Void) null);
+                    });
+        } else {
+            return configMapOperator.reconcile(reconciliation, reconciliation.namespace(), CruiseControlResources.logAndMetricsConfigMapName(reconciliation.name()), null)
+                    .map((Void) null);
+        }
+    }
 
     /**
      * Manages the Cruise Control certificates Secret.
