@@ -83,6 +83,12 @@ public enum CruiseControlConfigurationParameters {
      */
     METRIC_REPORTER_TOPIC_NAME("metric.reporter.topic"),
 
+      /**
+       * Name of the Cruise Control metrics topic
+     */
+    CRUISE_CONTROL_CONFIGMAP_NAME("capacity.config.file"),
+
+
     // Metrics reporter configurations
     /**
      * Metrics reporter bootstrap server
@@ -186,6 +192,11 @@ public enum CruiseControlConfigurationParameters {
      */
     ANOMALY_DETECTION_CONFIG_KEY("anomaly.detection.goals");
 
+    /**
+     *
+     */
+    //CAPACITY_CONFIG_FILE_KEY("capacity.config.file");
+
     // Defaults
     /**
      * Default value for enabling webserver
@@ -211,6 +222,11 @@ public enum CruiseControlConfigurationParameters {
      * Default topic name for the metrics reporter
      */
     public static final String DEFAULT_METRIC_REPORTER_TOPIC_NAME = "strimzi.cruisecontrol.metrics";
+  
+     /**  Name of the Cruise Control metrics topic
+     */
+    public static final String DEFAULT_CRUISE_CONTROL_CONFIGMAP_NAME = "/tmp/capacity.json";
+   
 
     private final String value;
 

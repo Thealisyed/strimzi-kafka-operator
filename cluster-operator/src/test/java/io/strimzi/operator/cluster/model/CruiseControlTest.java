@@ -50,16 +50,16 @@ import io.strimzi.api.kafka.model.storage.PersistentClaimStorageBuilder;
 import io.strimzi.api.kafka.model.storage.Storage;
 import io.strimzi.api.kafka.model.template.IpFamily;
 import io.strimzi.api.kafka.model.template.IpFamilyPolicy;
-import io.strimzi.operator.cluster.operator.resource.MockSharedEnvironmentProvider;
 import io.strimzi.operator.cluster.PlatformFeaturesAvailability;
 import io.strimzi.operator.cluster.KafkaVersionTestUtils;
 import io.strimzi.operator.cluster.ResourceUtils;
 import io.strimzi.operator.cluster.model.cruisecontrol.BrokerCapacity;
 import io.strimzi.operator.cluster.model.cruisecontrol.Capacity;
 import io.strimzi.operator.cluster.model.cruisecontrol.CpuCapacity;
+import io.strimzi.operator.cluster.operator.resource.MockSharedEnvironmentProvider;
+import io.strimzi.operator.cluster.operator.resource.SharedEnvironmentProvider;
 import io.strimzi.operator.cluster.operator.resource.cruisecontrol.CruiseControlConfigurationParameters;
 import io.strimzi.operator.common.Reconciliation;
-import io.strimzi.operator.cluster.operator.resource.SharedEnvironmentProvider;
 import io.strimzi.operator.common.model.Labels;
 import io.strimzi.platform.KubernetesVersion;
 import io.strimzi.plugin.security.profiles.impl.RestrictedPodSecurityProvider;
@@ -68,7 +68,7 @@ import io.strimzi.test.annotations.ParallelSuite;
 import io.strimzi.test.annotations.ParallelTest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-//import org.glassfish.jaxb.core.v2.
+//import org.glassfish.jaxb.core.v2;
 import org.junit.jupiter.api.AfterAll;
 
 import java.util.ArrayList;
@@ -80,11 +80,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import static io.strimzi.operator.cluster.model.CruiseControl.*;
+
+import static io.strimzi.operator.cluster.model.CruiseControl.API_HEALTHCHECK_PATH;
+import static io.strimzi.operator.cluster.model.CruiseControl.API_USER_NAME;
+import static io.strimzi.operator.cluster.model.CruiseControl.ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION;
 import static io.strimzi.operator.cluster.operator.resource.cruisecontrol.CruiseControlConfigurationParameters.ANOMALY_DETECTION_CONFIG_KEY;
 import static io.strimzi.operator.cluster.operator.resource.cruisecontrol.CruiseControlConfigurationParameters.DEFAULT_GOALS_CONFIG_KEY;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -166,9 +170,9 @@ public class CruiseControlTest {
     }
 
     private CruiseControl createCruiseControl(Kafka kafkaAssembly) {
+
         return CruiseControl
-                .fromCrd(
-                        Reconciliation.DUMMY_RECONCILIATION,
+                .fromCrd(Reconciliation.DUMMY_RECONCILIATION,
                         kafkaAssembly,
                         VERSIONS,
                         NODES,
@@ -224,6 +228,7 @@ public class CruiseControlTest {
         expected.add(new EnvVarBuilder().withName(CruiseControl.ENV_VAR_API_HEALTHCHECK_PATH).withValue(API_HEALTHCHECK_PATH).build());
         expected.add(new EnvVarBuilder().withName(CruiseControl.ENV_VAR_KAFKA_HEAP_OPTS).withValue("-Xms" + JvmOptionUtils.DEFAULT_JVM_XMS).build());
         expected.add(new EnvVarBuilder().withName(CruiseControl.ENV_VAR_CRUISE_CONTROL_CONFIGURATION).withValue(ccConfiguration.getConfiguration()).build());
+      //  io.strimzi.operator.cluster.TestUtils.maybeAddHttpProxyEnvVars(expected);
         return expected;
     }
 
@@ -261,7 +266,7 @@ public class CruiseControlTest {
         Kafka resource = createKafka(cruiseControlSpec);
 
         Capacity capacity = new Capacity(Reconciliation.DUMMY_RECONCILIATION, resource.getSpec(), NODES, createStorageMap(resource), createResourceRequirementsMap(resource));
-        Map<String, String> cm = generateBrokerCapacityConfigMapData(capacity);
+        Map<String, String> cm = CruiseControl.generateBrokerCapacityConfigMapData(capacity);
 
     //TODO RUN MINIKUBE START, CUSTOM DEPLOYMENT AND MAKE SURE CRUISE CONTROL RUN PROPERLY
         //TODO get actual config map for testing at 263
@@ -552,9 +557,9 @@ public class CruiseControlTest {
         assertThat(volumeMount, is(notNullValue()));
         assertThat(volumeMount.getMountPath(), is(VolumeUtils.STRIMZI_TMP_DIRECTORY_DEFAULT_MOUNT_PATH));
 
-        volumeMount = volumesMounts.stream().filter(vol -> CruiseControl.ENV_VAR_CRUISE_CONTROL_CAPACITY_CONFIGURATION.equals(vol.getName())).findFirst().orElseThrow();
+        volumeMount = volumesMounts.stream().filter(vol -> CruiseControl.DEFAULT_CAPACITY_CONFIG_FILE_CONFIG.equals(vol.getName())).findFirst().orElseThrow();
         assertThat(volumeMount, is(notNullValue()));
-        assertThat(volumeMount.getMountPath(), is(CruiseControlConfigurationParameters.DEFAULT_CAPACITY_CONFIG_FILE_CONFIG));
+        assertThat(volumeMount.getMountPath(), is(CruiseControl.DEFAULT_CAPACITY_CONFIG_FILE_CONFIG));
     }
 
     @ParallelTest

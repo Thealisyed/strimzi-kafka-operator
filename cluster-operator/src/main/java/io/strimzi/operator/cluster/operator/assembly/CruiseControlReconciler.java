@@ -124,6 +124,7 @@ public class CruiseControlReconciler {
         return networkPolicy()
                 .compose(i -> serviceAccount())
                 .compose(i -> metricsAndLoggingConfigMap())
+                .compose(i -> brokerCapacityConfigMap())
                 .compose(i -> certificatesSecret(clock))
                 .compose(i -> apiSecret())
                 .compose(i -> service())

@@ -95,10 +95,13 @@ public class CruiseControl extends AbstractModel implements SupportsMetrics, Sup
     protected static final String TLS_CA_CERTS_VOLUME_MOUNT = "/etc/cruise-control/cluster-ca-certs/";
     protected static final String LOG_AND_METRICS_CONFIG_VOLUME_NAME = "cruise-control-metrics-and-logging";
     protected static final String LOG_AND_METRICS_CONFIG_VOLUME_MOUNT = "/opt/cruise-control/custom-config/";
-    protected static final String CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_MOUNT = "/tmp/capacity.json";
     protected static final String API_AUTH_CONFIG_VOLUME_NAME = "api-auth-config";
     protected static final String API_AUTH_CONFIG_VOLUME_MOUNT = "/opt/cruise-control/api-auth-config/";
     protected static final String CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_NAME = "capacity.json";
+    protected static final String CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_MOUNT = "/tmp/";
+    protected static final String DEFAULT_CAPACITY_CONFIG_FILE_CONFIG =
+                    CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_MOUNT +
+                    CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_NAME;
     protected static final String API_AUTH_CREDENTIALS_FILE = API_AUTH_CONFIG_VOLUME_MOUNT + API_AUTH_FILE_KEY;
 
     protected static final String ENV_VAR_CRUISE_CONTROL_METRICS_ENABLED = "CRUISE_CONTROL_METRICS_ENABLED";
@@ -139,6 +142,7 @@ public class CruiseControl extends AbstractModel implements SupportsMetrics, Sup
     protected static final String ENV_VAR_API_HEALTHCHECK_PATH = "API_HEALTHCHECK_PATH";
 
     protected static final String CO_ENV_VAR_CUSTOM_CRUISE_CONTROL_POD_LABELS = "STRIMZI_CUSTOM_CRUISE_CONTROL_LABELS";
+    
 
     // Templates
     private DeploymentTemplate templateDeployment;
@@ -175,9 +179,10 @@ public class CruiseControl extends AbstractModel implements SupportsMetrics, Sup
      * @param reconciliation Reconciliation marker used for logging
      * @param kafkaCr        The Kafka custom resource
      * @param versions       Supported Kafka versions
-     * @param kafkaNodes     List of the nodes which are part of the Kafka cluster
+     * @param kafkaBrokerNodes  List of the nodes which are part of the Kafka cluster
      * @param kafkaStorage   A map with storage configuration used by the Kafka cluster and its node pools
-     * @param kafkaResources A map with resource configuration used by the Kafka cluster and its node pools
+     * @param kafkaBrokerResources A map with resource configuration used by the Kafka cluster and its node pools
+     * @param sharedEnvironmentProvider A Interface to be implemented for returning an instance of the environment variables shared by all containers.
      * @return Instance of the Cruise Control model
      */
     @SuppressWarnings({"checkstyle:NPathComplexity", "checkstyle:CyclomaticComplexity"})
@@ -562,12 +567,13 @@ public class CruiseControl extends AbstractModel implements SupportsMetrics, Sup
     }
 
     /**
-     *
+     * Generates a broker capacity configmap data and has assgined volume name
+     * @param capacity assigned capacity parameter for broker capacity configmap data
      * @return The generated ConfigMap.
      */
-    public static Map<String, String> generateBrokerCapacityConfigMapData(Capacity capacity) {
+    public static Map<String, String> generateBrokerCapacityConfigMapData(Capacity capacity) { //REVIEW: CHECK WITH KGUY
         Map<String, String> data = new HashMap<>();
-        data.put(CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_NAME, capacity.toString()); //TODO change key value to 'capacity.json' maybe? idk see if that works
+        data.put(CRUISE_CONTROL_CAPACITY_CONFIGURATION_VOLUME_NAME, capacity.toString()); 
         return data;
     }
     /**

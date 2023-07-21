@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-CC_CAPACITY_FILE="/tmp/capacity.json"
+#CC_CAPACITY_FILE="/tmp/capacity.json"
 CC_CLUSTER_CONFIG_FILE="/tmp/clusterConfig.json"
 CC_ACCESS_LOG="/tmp/access.log"
 
 # Generate capacity file
-echo "${CRUISE_CONTROL_CAPACITY_CONFIGURATION}" > "${CC_CAPACITY_FILE}"
+#echo "${CRUISE_CONTROL_CAPACITY_CONFIGURATION}" > "${CC_CAPACITY_FILE}"
 
 # Generate cluster config
 cat <<EOF > $CC_CLUSTER_CONFIG_FILE
